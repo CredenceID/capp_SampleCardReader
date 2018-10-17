@@ -112,7 +112,8 @@ public class MainActivity extends Activity {
 	};
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	protected void
+	onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		mContext = this;
@@ -128,6 +129,19 @@ public class MainActivity extends Activity {
 				openCardReader();
 			}
 		});
+	}
+
+	@Override
+	public void
+	onBackPressed() {
+		super.onBackPressed();
+
+		// If user presses back button then close card reader.
+		mBiometricsManager.cardCloseCommand();
+
+		// If user presses back button then they are exiting application. If this is the case then
+		// tell C-Service to unbind from this application.
+		mBiometricsManager.finalizeBiometrics(false);
 	}
 
 	private void
