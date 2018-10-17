@@ -244,7 +244,7 @@ public class MainActivity extends Activity {
 		}
 		Log.d(localTAG, "SW1, SW2: " + Hex.toString(response.sw1) + ", " + Hex.toString(response.sw2));
 
-		// After writing data to card we will not try to read that same data back!
+		// After writing data to card we will now try to read that same data back!
 		apdu = "FF"                   // MiFare Card
 				+ "B0"                // MiFare Card READ Command
 				+ "00"                // P1
