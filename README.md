@@ -8,40 +8,37 @@ the following APIs.
 
 ```java
 cardOpenCommand(new Biometrics.CardReaderStatusListener() {
-    @Override
-		public void onCardReaderOpen(ResultCode resultCode) {
-		}
-
-		Override
-		public void onCardReaderClosed(ResultCode resultCode,
-		                               CloseReasonCode closeReasonCode) {
-	  }
+	@Override
+	public void onCardReaderOpen(ResultCode resultCode) {
+	}
+    
+	@Override
+	public void onCardReaderClosed(ResultCode resultCode,
+				       CloseReasonCode closeReasonCode) {
+	}
 });
-```
 
-```java
 registerCardStatusListener(new Biometrics.OnCardStatusListener() {
-    @Override
-		public void onCardStatusChange(String ATR, int prevState, int currentState) {
+	@Override
+	public void onCardStatusChange(String ATR,
+				       int prevState,
+				       int currentState) {
 		
-		}
+	}
 });
-```
 
-```java
 cardCommand(ApduCommand, boolean, new Biometrics.OnCardCommandListener() {
-    @Override
-		public void onCardCommandComplete(ResultCode resultCode, byte sw1, byte sw2, byte[] data) {
+	@Override
+	public void onCardCommandComplete(ResultCode resultCode,
+					  byte sw1,
+					  byte sw2,
+					  byte[] data) {
 				
-		}
+	}
 });
-```
 
-```java
 cardCommandSync(new ApduCommand(""), boolean, int);
-```
 
-```java
 cardCloseCommand();
 ```
 
