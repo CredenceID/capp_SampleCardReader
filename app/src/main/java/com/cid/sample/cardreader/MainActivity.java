@@ -1,4 +1,4 @@
-package com.cid.cardsample;
+package com.cid.sample.cardreader;
 
 import android.app.Activity;
 import android.content.Context;

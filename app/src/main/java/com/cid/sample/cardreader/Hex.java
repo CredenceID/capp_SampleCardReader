@@ -1,4 +1,4 @@
-package com.cid.cardsample;
+package com.cid.sample.cardreader;
 
 /* This is a helper class used for converting bytes into human readable Hex strings. */
 @SuppressWarnings("WeakerAccess")
