@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools"
-	package="com.cid.sample.cardreader">
+	package="com.credenceid.sample.cardreader">
 
 	<application
 		android:allowBackup="true"
@@ -10,11 +10,17 @@
 		android:roundIcon="@drawable/ic_launcher"
 		android:supportsRtl="true"
 		tools:ignore="AllowBackup,GoogleAppIndexingWarning">
-		<activity android:name="com.cid.sample.cardreader.MainActivity">
+
+		<activity android:name=".LaunchActivity">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
-
 				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+
+		<activity android:name=".CardReaderActivity">
+			<intent-filter>
+				<action android:name="android.intent.action.DEFAULT" />
 			</intent-filter>
 		</activity>
 	</application>

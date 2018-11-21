@@ -13,11 +13,11 @@ allprojects {
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.cid.sample.cardreader"
+        applicationId "com.credenceid.sample.cardreader"
         minSdkVersion 18
         targetSdkVersion 28
         versionCode 1
-        versionName "1.20.0000"
+        versionName "1.20.2000"
     }
     buildTypes {
         release {
