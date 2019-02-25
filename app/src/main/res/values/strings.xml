@@ -1,8 +1,11 @@
 <resources>
 	<string name="app_name">SampleCardReaderApp</string>
 
+	<string name="biometrics_initialized">Biometrics initialized.</string>
+	<string name="biometrics_fail_init">Biometrics FAILED to initialize.</string>
 
 	<string name="open_card">Open CardReader</string>
+	<string name="close_card_reader">Close CardReader</string>
 	<string name="write_data">Write To Card</string>
 	<string name="read_data">Read From Card</string>
 	<string name="card_sync_checkbox_label">Use Synchronous APIs</string>
@@ -26,6 +29,7 @@
 	<string name="no_card_present_read_from">No card present to read from.</string>
 	<string name="done_reading_from_card">Done reading data from card.</string>
 	<string name="reading_card_wait">Reading data from card, please wait…</string>
-	<string name="close_card_reader">Close CardReader</string>
-	<string name="open_card_reader">Open CardReader</string>
+
+	<string name="card_reader_fail_close">Card reader failed to close.</string>
+	<string name="card_reader_closed">Card reader closed: </string>
 </resources>
