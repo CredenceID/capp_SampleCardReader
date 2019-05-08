@@ -34,6 +34,7 @@ public class CardReaderActivity
     private static final int mEMPTY_STRING_LEN = 0;
     private static final int mREAD_SPECIAL_APDU_LEN = 10;
     private static final int CARD_ABSENT = 1;
+    private static final int CARD_PRESENT = 2;
 
     /* --------------------------------------------------------------------------------------------
      *
