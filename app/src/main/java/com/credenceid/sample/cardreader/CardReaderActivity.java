@@ -174,10 +174,6 @@ public class CardReaderActivity
 
         /* Close card reader since user is exiting activity. */
         App.BioManager.cardCloseCommand();
-        /* If user presses back button then they are exiting application. If this is the case then
-         * tell C-Service to unbind from this application.
-         */
-        App.BioManager.finalizeBiometrics(false);
     }
 
     /* --------------------------------------------------------------------------------------------
