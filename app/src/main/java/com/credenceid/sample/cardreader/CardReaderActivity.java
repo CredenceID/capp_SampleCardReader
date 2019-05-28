@@ -2,8 +2,10 @@ package com.credenceid.sample.cardreader;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -291,6 +293,11 @@ public class CardReaderActivity
                 readCardSync(mReadAPDUCommand);
             else readCardAsync(mReadAPDUCommand);
         });
+
+        mWriteDataEditText.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus)
+                hideKeyboard(v);
+        });
     }
 
     /* --------------------------------------------------------------------------------------------
@@ -299,6 +306,18 @@ public class CardReaderActivity
      *
      * --------------------------------------------------------------------------------------------
      */
+
+    /* Hides keyboard for a give view. This is usually used with EditText components. */
+    private void
+    hideKeyboard(View view) {
+
+        try {
+            InputMethodManager inputMethodManager =
+                    (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        } catch (NullPointerException ignore) {
+        }
+    }
 
     /* Calls Credence APIs to open card reader. */
     private void
