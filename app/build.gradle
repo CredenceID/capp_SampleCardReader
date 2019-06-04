@@ -21,10 +21,29 @@ android {
         archivesBaseName = "C-Card"
     }
 
+    signingConfigs {
+        debug {
+        }
+        release {
+            keyAlias 'CredenceIDPublicKey'
+            keyPassword 'CredenceID'
+            storeFile file('../../CredencePublicKeys/PublicKey.jks')
+            storePassword 'CredenceID'
+        }
+    }
+
     buildTypes {
+        debug {
+            minifyEnabled false
+        }
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
+            zipAlignEnabled true
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
 
