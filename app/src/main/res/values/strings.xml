@@ -1,8 +1,8 @@
 <resources>
 	<string name="app_name">SampleCardReaderApp</string>
 
-	<string name="biometrics_initialized">Biometrics initialized.</string>
-	<string name="biometrics_fail_init">Biometrics FAILED to initialize.</string>
+	<string name="bio_init">Biometrics initialized.</string>
+	<string name="bio_fail_init">Biometrics FAILED to initialize.</string>
 
 	<string name="open_card">Open CardReader</string>
 	<string name="close_card_reader">Close CardReader</string>
