@@ -6,7 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.*
+import android.widget.AdapterView
 import com.credenceid.biometrics.ApduCommand
 import com.credenceid.biometrics.Biometrics
 import com.credenceid.biometrics.Biometrics.CloseReasonCode
@@ -24,17 +24,17 @@ class CardReaderActivity : Activity() {
     /**
      * Keeps track of card reader sensor. If true then sensor is open, if false sensor is closed.
      */
-    private var mIsCardReaderOpen = false
+    private var isSensorOpen = false
     /**
      * Keeps track of if card is present on sensor. If true card is present, if false no card is
      * present.
      */
-    private var misCardPresent = false
+    private var isCardPresent = false
 
     /**
      * Reads 4096 (4K) number of bytes from card.
      */
-    private val mAPDURead4k = ("FF"         // MiFare Card
+    private val read4KAPDU = ("FF"         // MiFare Card
             + "B0"                            // MiFare Card READ Command
             + "00"                            // P1
             + "00"                            // P2: Block Number
@@ -42,7 +42,7 @@ class CardReaderActivity : Activity() {
     /**
      * Reads 2048 (2K) number of bytes from card.
      */
-    private val mAPDURead2k = ("FF"         // MiFare Card
+    private val read2KAPDU = ("FF"         // MiFare Card
             + "B0"                            // MiFare Card READ Command
             + "00"                            // P1
             + "00"                            // P2: Block Number
@@ -50,15 +50,15 @@ class CardReaderActivity : Activity() {
     /**
      * Reads 1024 (1K) number of bytes from card.
      */
-    private val mAPDURead1k = ("FF"         // MiFare Card
+    private val read1KAPDU = ("FF"         // MiFare Card
             + "B0"                            // MiFare Card READ Command
             + "00"                            // P1
             + "00"                            // P2: Block Number
             + "000400")                       // Number of bytes to read
     /**
-     * This APDU is used to read "mSpecialData" written to the card.
+     * This APDU is used to read "specialData" written to the card.
      */
-    private var mAPDUReadSpecialData = ("FF"  // MiFare Card
+    private var readSpecialDataAPDU = ("FF"  // MiFare Card
             + "B0"                              // MiFare Card READ Command
             + "00"                              // P1
             + "01"                              // P2: Block Number
@@ -66,7 +66,7 @@ class CardReaderActivity : Activity() {
     /**
      * Writes 4096 (4K) number of bytes to card.
      */
-    private val mAPDUWrite4k = ("FF"        // MiFare Card
+    private val write4KAPDU = ("FF"        // MiFare Card
             + "D6"                            // MiFare Card READ Command
             + "00"                            // P1
             + "00"                            // P2: Block Number
@@ -74,7 +74,7 @@ class CardReaderActivity : Activity() {
     /**
      * Writes 2048 (2K) number of bytes to card.
      */
-    private val mAPDUWrite2k = ("FF"        // MiFare Card
+    private val write2KAPDU = ("FF"        // MiFare Card
             + "D6"                            // MiFare Card READ Command
             + "00"                            // P1
             + "00"                            // P2: Block Number
@@ -82,7 +82,7 @@ class CardReaderActivity : Activity() {
     /**
      * Writes 1024 (1K) number of bytes to card.
      */
-    private val mAPDUWrite1k = ("FF"        // MiFare Card
+    private val write1KAPDU = ("FF"        // MiFare Card
             + "D6"                            // MiFare Card READ Command
             + "00"                            // P1
             + "00"                            // P2: Block Number
@@ -90,13 +90,13 @@ class CardReaderActivity : Activity() {
     /**
      * Data to be written to card will be stored here.
      */
-    private var mSpecialData: ByteArray? = null
+    private var specialData: ByteArray = ByteArray(0)
 
     /**
      * APDU executed when "readDataBtn" is clicked. This APDU will change each time a
      * different type of read is selected via "readAPDUSelector".
      */
-    private var mReadAPDUCommand = mAPDURead1k
+    private var currentReadAPDU = read1KAPDU
 
     /**
      * Callback invoked each time sensor detects a card change.
@@ -104,15 +104,15 @@ class CardReaderActivity : Activity() {
     private val onCardStatusListener = { _: String, _: Int, currentState: Int ->
         /* If currentState is 1, then no card is present. */
         if (CARD_ABSENT == currentState) {
-            misCardPresent = false
-            cardStatusTextView!!.text = getString(R.string.card_absent)
+            isCardPresent = false
+            cardStatusTextView.text = getString(R.string.card_absent)
         }
         /* currentStates [2, 6] represent a card present. If a card is present code will reach.
          * Here you may perform any operations you want ran automatically when a card is detected.
          */
         else {
-            misCardPresent = true
-            cardStatusTextView!!.text = getString(R.string.card_present)
+            isCardPresent = true
+            cardStatusTextView.text = getString(R.string.card_present)
         }
     }
 
@@ -147,52 +147,52 @@ class CardReaderActivity : Activity() {
         this.setReadWriteComponentEnable(false)
 
         /* This will remove focus from view, meaning keyboard will hide. */
-        writeEditText!!.clearFocus()
+        writeEditText.clearFocus()
 
-        openCloseBtn!!.setOnClickListener {
-            openCloseBtn!!.isEnabled = false
-            cardStatusTextView!!.text = ""
+        openCloseBtn.setOnClickListener {
+            openCloseBtn.isEnabled = false
+            cardStatusTextView.text = ""
 
             /* Based on status of card reader take appropriate action. */
-            if (mIsCardReaderOpen)
+            if (isSensorOpen)
                 App.BioManager!!.cardCloseCommand()
             else
                 this.openCardReader()
         }
 
-        /* Each time an item is selected we need up update "mReadAPDUCommand". This is so when user
+        /* Each time an item is selected we need up update "currentReadAPDU". This is so when user
          * presses "readDataBtn", APDU which matches  selected option has already been set.
          */
-        readAPDUSelector!!.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        readAPDUSelector.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>,
                                         view: View,
                                         position: Int,
                                         id: Long) {
 
                 when (position) {
-                    0 -> mReadAPDUCommand = mAPDUReadSpecialData
-                    1 -> mReadAPDUCommand = mAPDURead1k
-                    2 -> mReadAPDUCommand = mAPDURead2k
-                    3 -> mReadAPDUCommand = mAPDURead4k
+                    0 -> currentReadAPDU = readSpecialDataAPDU
+                    1 -> currentReadAPDU = read1KAPDU
+                    2 -> currentReadAPDU = read2KAPDU
+                    3 -> currentReadAPDU = read4KAPDU
                 }
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        writeDataBtn!!.setOnClickListener {
+        writeDataBtn.setOnClickListener {
             /* Do not do anything if card is not present. */
-            if (!misCardPresent) {
-                cardReaderStatusTextView!!.text = getString(R.string.no_card_present_to_write_to)
+            if (!isCardPresent) {
+                cardReaderStatusTextView.text = getString(R.string.no_card_present_to_write_to)
                 return@setOnClickListener
             }
 
             /* Check to make sure user has entered some valid data to write to card. If nothing
              * exists then do not do anything.
              */
-            val data = writeEditText!!.text.toString()
+            val data = writeEditText.text.toString()
             if (mEMPTY_STRING_LEN == data.length) {
-                cardReaderStatusTextView!!.text = getString(R.string.no_data_to_write_to_card)
+                cardReaderStatusTextView.text = getString(R.string.no_data_to_write_to_card)
                 return@setOnClickListener
             }
 
@@ -200,19 +200,19 @@ class CardReaderActivity : Activity() {
             this.setReadWriteComponentEnable(false)
 
             /* Save data to write inside our global variable. */
-            mSpecialData = data.toByteArray()
+            specialData = data.toByteArray()
 
             /* Based on if user has selected sync/async APIs call appropriate method. */
-            if (syncCheckBox!!.isChecked)
-                writeCardSync(mSpecialData)
+            if (syncCheckBox.isChecked)
+                writeCardSync(specialData)
             else
-                writeCardAsync(mSpecialData)
+                writeCardAsync(specialData)
         }
 
-        readDataBtn!!.setOnClickListener {
+        readDataBtn.setOnClickListener {
             /* Do not do anything if card is not present. */
-            if (!misCardPresent) {
-                cardReaderStatusTextView!!.text = getString(R.string.no_card_present_read_from)
+            if (!isCardPresent) {
+                cardReaderStatusTextView.text = getString(R.string.no_card_present_read_from)
                 return@setOnClickListener
             }
 
@@ -220,13 +220,13 @@ class CardReaderActivity : Activity() {
             this.setReadWriteComponentEnable(false)
 
             /* Based on if user has selected sync/async APIs call appropriate method. */
-            if (syncCheckBox!!.isChecked)
-                readCardSync(mReadAPDUCommand)
+            if (syncCheckBox.isChecked)
+                readCardSync(currentReadAPDU)
             else
-                readCardAsync(mReadAPDUCommand)
+                readCardAsync(currentReadAPDU)
         }
 
-        writeEditText!!.setOnFocusChangeListener { v, hasFocus ->
+        writeEditText.setOnFocusChangeListener { v, hasFocus ->
             if (!hasFocus)
                 hideKeyboard(v)
         }
@@ -238,8 +238,8 @@ class CardReaderActivity : Activity() {
     private fun hideKeyboard(view: View) {
 
         try {
-            val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+            val im = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            im.hideSoftInputFromWindow(view.windowToken, 0)
         } catch (ignore: NullPointerException) {
         }
     }
@@ -250,24 +250,23 @@ class CardReaderActivity : Activity() {
     private fun openCardReader() {
 
         /* Let user know card reader will now try to be opened. */
-        cardReaderStatusTextView!!.text = getString(R.string.opening_card_reader)
+        cardReaderStatusTextView.text = getString(R.string.opening_card_reader)
 
         App.BioManager!!.cardOpenCommand(object : Biometrics.CardReaderStatusListener {
             override fun onCardReaderOpen(resultCode: ResultCode) {
                 when {
                     OK == resultCode -> {
-                        openCloseBtn!!.isEnabled = true
+                        openCloseBtn.isEnabled = true
+                        isSensorOpen = true
 
-                        mIsCardReaderOpen = true
-
-                        cardReaderStatusTextView!!.text = getString(R.string.card_reader_opened)
-                        openCloseBtn!!.text = getString(R.string.close_card_reader)
+                        cardReaderStatusTextView.text = getString(R.string.card_reader_opened)
+                        openCloseBtn.text = getString(R.string.close_card_reader)
 
                         setReadWriteComponentEnable(true)
 
-                        /* If card reader opened successfully, register a listener will be invoked each time
-                         * card reader's status changes. Meaning that anytime a card is placed/removed
-                         * invoke this callback.
+                        /* If card reader opened successfully, register a listener will be invoked
+                         * each time card reader's status changes. Meaning that anytime a card is
+                         * placed/removed invoke this callback.
                          */
                         App.BioManager!!.registerCardStatusListener(onCardStatusListener)
                     }
@@ -275,8 +274,8 @@ class CardReaderActivity : Activity() {
                         /* This code is never returned here. */
                     }
                     FAIL == resultCode -> {
-                        openCloseBtn!!.isEnabled = true
-                        cardReaderStatusTextView!!.text = getString(R.string.failed_open_card_reader)
+                        openCloseBtn.isEnabled = true
+                        cardReaderStatusTextView.text = getString(R.string.failed_open_card_reader)
                     }
                 }
             }
@@ -285,20 +284,21 @@ class CardReaderActivity : Activity() {
             override fun onCardReaderClosed(resultCode: ResultCode,
                                             closeReasonCode: CloseReasonCode) {
 
-                openCloseBtn!!.isEnabled = true
+                openCloseBtn.isEnabled = true
                 when {
                     OK == resultCode -> {
-                        mIsCardReaderOpen = false
-                        cardReaderStatusTextView!!.text = getString(R.string.card_reader_closed) + closeReasonCode.name
-                        cardStatusTextView!!.text = ""
-                        openCloseBtn!!.text = getString(R.string.open_card)
+                        isSensorOpen = false
+                        cardReaderStatusTextView.text =
+                                getString(R.string.card_reader_closed) + closeReasonCode.name
+                        cardStatusTextView.text = ""
+                        openCloseBtn.text = getString(R.string.open_card)
                         setReadWriteComponentEnable(false)
                     }
                     INTERMEDIATE == resultCode -> {
                         /* This code is never returned here. */
                     }
                     FAIL == resultCode ->
-                        cardReaderStatusTextView!!.text = getString(R.string.card_reader_fail_close)
+                        cardReaderStatusTextView.text = getString(R.string.card_reader_fail_close)
                 }
             }
         })
@@ -311,10 +311,10 @@ class CardReaderActivity : Activity() {
      */
     private fun setReadWriteComponentEnable(enabled: Boolean) {
 
-        writeEditText!!.isEnabled = enabled
-        writeDataBtn!!.isEnabled = enabled
-        readAPDUSelector!!.isEnabled = enabled
-        readDataBtn!!.isEnabled = enabled
+        writeEditText.isEnabled = enabled
+        writeDataBtn.isEnabled = enabled
+        readAPDUSelector.isEnabled = enabled
+        readDataBtn.isEnabled = enabled
     }
 
     /**
@@ -332,7 +332,8 @@ class CardReaderActivity : Activity() {
      * @param APDUCommand Initial APDU command to execute.
      */
     private fun readCardAsync(APDUCommand: String) {
-        cardReaderStatusTextView!!.text = getString(R.string.reading_card_wait)
+
+        cardReaderStatusTextView.text = getString(R.string.reading_card_wait)
 
         App.BioManager!!.cardCommand(ApduCommand(APDUCommand), false) { rc: ResultCode,
                                                                         sw1: Byte,
@@ -345,7 +346,7 @@ class CardReaderActivity : Activity() {
                     /* If data read was equal to special data then convert each byte into human
                      * understandable text, ASCII chars.
                      */
-                    if (mREAD_SPECIAL_APDU_LEN == mReadAPDUCommand.length) {
+                    if (mREAD_SPECIAL_APDU_LEN == currentReadAPDU.length) {
                         dataToDisplay = ""
                         /* Convert read data into human readable ASCII characters. */
                         for (aData in data)
@@ -362,15 +363,15 @@ class CardReaderActivity : Activity() {
                             data.size,
                             dataToDisplay)
 
-                    cardReaderStatusTextView!!.text = getString(R.string.done_reading_from_card)
-                    dataTextView!!.text = str
+                    cardReaderStatusTextView.text = getString(R.string.done_reading_from_card)
+                    dataTextView.text = str
                 }
                 INTERMEDIATE == rc -> {
                     /* This code is never returned here. */
                 }
                 FAIL == rc -> {
-                    cardReaderStatusTextView!!.text = getString(R.string.done_reading_from_card)
-                    dataTextView!!.text = getString(R.string.apdu_failed)
+                    cardReaderStatusTextView.text = getString(R.string.done_reading_from_card)
+                    dataTextView.text = getString(R.string.apdu_failed)
                 }
             }
 
@@ -387,16 +388,17 @@ class CardReaderActivity : Activity() {
      */
     private fun readCardSync(APDUCommand: String) {
 
-        cardReaderStatusTextView!!.text = getString(R.string.reading_card_wait)
+        cardReaderStatusTextView.text = getString(R.string.reading_card_wait)
 
         GlobalScope.launch(Dispatchers.Main) {
             val response = App.BioManager!!.cardCommandSync(ApduCommand(APDUCommand), false, 4000)
 
             /* If APDU failed then response will be NULL. */
             if (null == response) {
-                cardReaderStatusTextView!!.text = getString(R.string.done_reading_from_card)
-                dataTextView!!.text = getString(R.string.apdu_failed)
+                cardReaderStatusTextView.text = getString(R.string.done_reading_from_card)
+                dataTextView.text = getString(R.string.apdu_failed)
                 setReadWriteComponentEnable(true)
+                return@launch
             }
 
             var dataToDisplay: String
@@ -404,14 +406,14 @@ class CardReaderActivity : Activity() {
             /* If data read was special data then convert each read byte into human understandable
              * text, ASCII chars.
              */
-            if (mREAD_SPECIAL_APDU_LEN == mReadAPDUCommand.length) {
+            if (mREAD_SPECIAL_APDU_LEN == currentReadAPDU.length) {
                 dataToDisplay = ""
                 /* Convert read data into human readable ASCII characters. */
-                for (i in response!!.data.indices)
+                for (i in response.data.indices)
                     dataToDisplay += response.data[i].toChar()
             } else {
                 /* If non special data was read then simply convert to String format. */
-                dataToDisplay = HexUtils.toString(response!!.data)
+                dataToDisplay = HexUtils.toString(response.data)
             }
 
             val str = String.format(Locale.ENGLISH,
@@ -421,8 +423,8 @@ class CardReaderActivity : Activity() {
                     response.data.size,
                     dataToDisplay)
 
-            cardReaderStatusTextView!!.text = getString(R.string.done_reading_from_card)
-            dataTextView!!.text = str
+            cardReaderStatusTextView.text = getString(R.string.done_reading_from_card)
+            dataTextView.text = str
             setReadWriteComponentEnable(true)
         }
     }
@@ -442,30 +444,30 @@ class CardReaderActivity : Activity() {
      *
      * @param dataToWrite, Data to write to card in byte array format.
      */
-    private fun writeCardSync(dataToWrite: ByteArray?) {
+    private fun writeCardSync(dataToWrite: ByteArray) {
 
         GlobalScope.launch(Dispatchers.Main) {
-            val apdu = createWriteAPDUCommand(0x01.toByte(), dataToWrite!!)
+            val apdu = createWriteAPDUCommand(0x01.toByte(), dataToWrite)
             val response = App.BioManager!!.cardCommandSync(ApduCommand(apdu), false, 4000)
 
             /* If APDU failed then response will be NULL. */
             if (null == response) {
-                cardReaderStatusTextView!!.text = getString(R.string.done_writing_to_card)
-                dataTextView!!.text = getString(R.string.apdu_failed)
+                cardReaderStatusTextView.text = getString(R.string.done_writing_to_card)
+                dataTextView.text = getString(R.string.apdu_failed)
                 setReadWriteComponentEnable(true)
+                return@launch
             }
 
             val str = String.format(Locale.ENGLISH,
                     "SW1: %s, SW2: %s",
-                    HexUtils.toString(response!!.sw1),
+                    HexUtils.toString(response.sw1),
                     HexUtils.toString(response.sw2))
 
-            cardReaderStatusTextView!!.text = getString(R.string.done_writing_to_card)
-            dataTextView!!.text = str
-
+            cardReaderStatusTextView.text = getString(R.string.done_writing_to_card)
+            dataTextView.text = str
             setReadWriteComponentEnable(true)
 
-            /* If a write was successful we should then update "mAPDUReadSpecialData" so that it
+            /* If a write was successful we should then update "readSpecialDataAPDU" so that it
              * will same number of bytes that were written.
              */
             updateReadSpecialAPDU()
@@ -476,9 +478,9 @@ class CardReaderActivity : Activity() {
      * This method attempts to write some data to MiFare card. After writing data it will then try
      * to read that same data back.
      */
-    private fun writeCardAsync(dataToWrite: ByteArray?) {
+    private fun writeCardAsync(dataToWrite: ByteArray) {
 
-        val apdu = createWriteAPDUCommand(0x01.toByte(), dataToWrite!!)
+        val apdu = createWriteAPDUCommand(0x01.toByte(), dataToWrite)
 
         App.BioManager!!.cardCommand(ApduCommand(apdu), false) { rc: ResultCode,
                                                                  sw1: Byte,
@@ -492,13 +494,13 @@ class CardReaderActivity : Activity() {
                             HexUtils.toString(sw1),
                             HexUtils.toString(sw2))
 
-                    cardReaderStatusTextView!!.text = getString(R.string.done_writing_to_card)
-                    dataTextView!!.text = str
+                    cardReaderStatusTextView.text = getString(R.string.done_writing_to_card)
+                    dataTextView.text = str
 
                     this.setReadWriteComponentEnable(true)
 
-                    /* If a write was successful we should then update "mAPDUReadSpecialData" so that it
-                     * will same number of bytes that were written.
+                    /* If a write was successful we should then update "readSpecialDataAPDU" so that
+                     * it will same number of bytes that were written.
                      */
                     this.updateReadSpecialAPDU()
                 }
@@ -506,8 +508,8 @@ class CardReaderActivity : Activity() {
                     /* This code is never returned here. */
                 }
                 FAIL == rc -> {
-                    cardReaderStatusTextView!!.text = getString(R.string.done_writing_to_card)
-                    dataTextView!!.text = getString(R.string.apdu_failed)
+                    cardReaderStatusTextView.text = getString(R.string.done_writing_to_card)
+                    dataTextView.text = getString(R.string.apdu_failed)
                     this.setReadWriteComponentEnable(true)
                 }
             }
@@ -550,15 +552,15 @@ class CardReaderActivity : Activity() {
      */
     private fun updateReadSpecialAPDU() {
 
-        mAPDUReadSpecialData = ("FF"   // MiFare Card
+        readSpecialDataAPDU = ("FF"   // MiFare Card
                 + "B0"                // MiFare Card READ Command
                 + "00"                // P1
                 + "01")               // P2: Block Number
-        mAPDUReadSpecialData += HexUtils.toString(mSpecialData!!.size.toByte())
+        readSpecialDataAPDU += HexUtils.toString(specialData.size.toByte())
 
         /* If user has selected special read APDU, then we need to update it also. */
-        if (mREAD_SPECIAL_APDU_LEN == mReadAPDUCommand.length)
-            mReadAPDUCommand = mAPDUReadSpecialData
+        if (mREAD_SPECIAL_APDU_LEN == currentReadAPDU.length)
+            currentReadAPDU = readSpecialDataAPDU
 
     }
 

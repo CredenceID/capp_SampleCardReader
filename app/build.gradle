@@ -20,7 +20,7 @@ android {
         //noinspection OldTargetApi
         targetSdkVersion 28
         versionCode 1
-        versionName "2.2.1"
+        versionName "2.3.0.4"
         archivesBaseName = "C-Card"
     }
 

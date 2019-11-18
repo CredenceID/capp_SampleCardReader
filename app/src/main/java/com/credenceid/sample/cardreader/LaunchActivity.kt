@@ -23,7 +23,9 @@ class LaunchActivity : Activity() {
         /*  Create new biometrics object. */
         App.BioManager = BiometricsManager(this)
         /* Initialize object, meaning tell CredenceService to bind to this application. */
-        App.BioManager!!.initializeBiometrics { rc: Biometrics.ResultCode, _: String, _: String ->
+        App.BioManager!!.initializeBiometrics { rc: Biometrics.ResultCode,
+                                                _: String,
+                                                _: String ->
 
             when {
                 OK == rc -> {
@@ -42,7 +44,8 @@ class LaunchActivity : Activity() {
                 INTERMEDIATE == rc -> {
                     /* This code is never returned here. */
                 }
-                FAIL == rc -> Toast.makeText(this, getString(R.string.bio_fail_init), LENGTH_LONG).show()
+                FAIL == rc ->
+                    Toast.makeText(this, getString(R.string.bio_fail_init), LENGTH_LONG).show()
             }
         }
     }
