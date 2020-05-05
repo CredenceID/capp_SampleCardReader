@@ -3,7 +3,10 @@ package com.credenceid.sample.cardreader;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.provider.Settings;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -53,9 +56,10 @@ public class CardReaderActivity
     private Button mWriteToCardButton;
     private Spinner mReadAPDUSelectSpinner;
     private Button mReadFromCardButton;
+    private Button mconnect_disconnect;
 
     /* Keeps track of card reader sensor. If true then sensor is open, if false sensor is closed. */
-    private boolean mIsCardReaderOpen = false;
+    private boolean                                                                                                                     mIsCardReaderOpen = false;
     /* Keeps track of if card is present on sensor. If true card is present, if false no card is
      * present.
      */
@@ -139,6 +143,7 @@ public class CardReaderActivity
          */
     };
 
+
     /* --------------------------------------------------------------------------------------------
      *
      * Android activity lifecycle event methods.
@@ -195,6 +200,7 @@ public class CardReaderActivity
 
         mSyncCheckbox = findViewById(R.id.sync_checkbox);
         mOpenCloseButton = findViewById(R.id.open_close_button);
+        mconnect_disconnect = findViewById(R.id.connect_disconnect);
 
         mWriteDataEditText = findViewById(R.id.write_edittext);
         mWriteToCardButton = findViewById(R.id.write_data_button);
@@ -222,6 +228,14 @@ public class CardReaderActivity
                 App.BioManager.cardCloseCommand();
             else this.openCardReader();
         });
+
+        mconnect_disconnect.setOnClickListener((View v) -> {
+            mCardStatusTextView.setText("");
+            this.ConnectSync();
+
+        });
+
+
 
         /* Each time an item is selected we need up update "mReadAPDUCommand". This is so when user
          * presses "mReadFromCardButton", APDU which matches  selected option has already been set.
@@ -337,6 +351,8 @@ public class CardReaderActivity
                     mIsCardReaderOpen = true;
 
                     mCardReaderStatusTextView.setText(getString(R.string.card_reader_opened));
+
+
                     mOpenCloseButton.setText(getString(R.string.close_card_reader));
 
                     setReadWriteComponentEnable(true);
@@ -383,6 +399,25 @@ public class CardReaderActivity
             }
         });
     }
+
+
+    private void
+    ConnectSync(){
+
+        new Handler().postDelayed(() -> {
+            boolean res = App.BioManager.cardConnectSync(15000);
+            System.out.println(res);
+            if (res == true) {
+                mCardReaderStatusTextView.setText("==>PASS");
+            }
+            else {
+                mCardReaderStatusTextView.setText("==>FAIL");
+            }
+        }, 5000);
+
+    }
+
+
 
     /* Set enable for components which allow user to read/write from/to card and form APDUs.
      *
@@ -442,6 +477,7 @@ public class CardReaderActivity
                         dataToDisplay);
 
                 mCardReaderStatusTextView.setText(getString(R.string.done_reading_from_card));
+
                 mDataTextView.setText(str);
 
             } else if (INTERMEDIATE == resultCode) {

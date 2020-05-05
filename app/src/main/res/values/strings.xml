@@ -5,6 +5,7 @@
 	<string name="biometrics_fail_init">Biometrics FAILED to initialize.</string>
 
 	<string name="open_card">Open CardReader</string>
+	<string name="connect_disconnect">Connect_disconnect</string>
 	<string name="close_card_reader">Close CardReader</string>
 	<string name="write_data">Write To Card</string>
 	<string name="read_data">Read From Card</string>
