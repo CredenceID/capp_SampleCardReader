@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
@@ -206,7 +207,7 @@ class CardReaderActivity : Activity() {
             if (syncCheckBox.isChecked)
                 writeCardSync(specialData)
             else
-                writeCardAsync(specialData)
+                writeCardAsyncInLoop(specialData) //writeCardAsync(specialData)
         }
 
         readDataBtn.setOnClickListener {
@@ -513,6 +514,20 @@ class CardReaderActivity : Activity() {
                     this.setReadWriteComponentEnable(true)
                 }
             }
+        }
+    }
+
+    private fun writeCardAsyncInLoop(dataToWrite: ByteArray) {
+
+        val apdu = createWriteAPDUCommand(0x01.toByte(), dataToWrite)
+
+        for (i in 0..1000){
+            App.BioManager!!.cardCommand(ApduCommand(apdu), false) { rc: ResultCode,
+                                                                     sw1: Byte,
+                                                                     sw2: Byte,
+                                                                     _: ByteArray ->
+            }
+            Log.d("CardReaderActivity" , "CardCommand : $i");
         }
     }
 
